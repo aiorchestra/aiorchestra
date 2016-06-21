@@ -1,0 +1,3 @@
+uvloop
+tosca-parser
+requests

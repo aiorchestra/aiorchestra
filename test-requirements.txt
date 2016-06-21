@@ -1,0 +1,6 @@
+tox
+testrepository
+mock
+testtools
+flake8==2.5.0
+coverage>=3.6 # Apache-2.0

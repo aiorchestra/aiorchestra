@@ -1,0 +1,308 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+node_types:
+
+##################################################################################################
+# OpenStack base node type
+##################################################################################################
+
+  tosca.openstack.node:
+    derived_from: tosca.nodes.Root
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        create:
+          implementation: aiorchestra.core.noop:noop
+          description: Operation to create the source endpoint.
+          inputs:
+            type: map
+        start:
+          implementation: aiorchestra.core.noop:noop
+          description:  Operation to start the source endpoint.
+          inputs:
+            type: map
+        stop:
+          implementation: aiorchestra.core.noop:noop
+          description:  Operation to stop the source endpoint.
+          inputs:
+            type: map
+        delete:
+          description:  Operation to delete the source endpoint.
+          implementation: aiorchestra.core.noop:noop
+          inputs:
+            type: map
+        configure:
+          description:  Operation to configure the source endpoint.
+          implementation: aiorchestra.core.noop:noop
+          inputs:
+            type: map
+
+##################################################################################################
+# OpenStack base relationship node type
+##################################################################################################
+
+  tosca.openstack.relationships.operations:
+    derived_from: tosca.interfaces.relationship.Configure
+    link:
+      implementation: aiorchestra.core.noop:noop
+      inputs:
+        type: map
+    unlink:
+      implementation: aiorchestra.core.noop:noop
+      inputs:
+        type: map
+
+  tosca.openstack.relationships.node:
+    derived_from: tosca.relationships.Root
+    interfaces:
+      Configure:
+        type: tosca.interfaces.relationship.Configure
+        link:
+          implementation: aiorchestra.core.noop:link
+          inputs:
+            type: map
+        unlink:
+          implementation: aiorchestra.core.noop:unlink
+          inputs:
+            type: map
+
+##################################################################################################
+# OpenStack authorization form
+##################################################################################################
+
+  tosca.openstack.authorization_form:
+    derived_from: tosca.openstack.node
+    properties:
+      username:
+        type: string
+        required: true
+      password:
+        type: string
+        required: true
+      project_name:
+        type: string
+        required: true
+      auth_url:
+        type: string
+        required: true
+      region_name:
+        type: string
+        required: false
+      user_domain_name:
+        type: string
+        required: false
+      project_domain_name:
+        type: string
+        required: false
+    attributes:
+      auth_properties:
+        type: map
+      auth_token:
+        type: string
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        create:
+          implementation: openstack_plugin.access_and_security.authorization:authorize
+          inputs:
+            type: map
+
+##################################################################################################
+# OpenStack Access and Security: SSH keys
+##################################################################################################
+
+  tosca.openstack.access_and_security.ssh_keypair:
+    derived_from: tosca.openstack.node
+    properties:
+      use_connection_pool:
+        type: boolean
+        default: false
+      compute_api_version:
+        type: string
+        default: '2'
+        constraints:
+          - valid_values: ['2']
+      use_existing:
+        type: boolean
+        default: false
+        constraints:
+          - valid_values: [true, false]
+      name:
+        type: string
+        required: true
+      public_key:
+        type: string
+        required: False
+    attributes:
+      id:
+        type: string
+      name:
+        type: string
+      public_key:
+        type: string
+      private_key_content:
+        type: string
+    requirements:
+      - authorization_form:
+          capability: tosca.capabilities.Node
+          node: tosca.openstack.authorization_form
+          relationship: tosca.openstack.access_and_security.inject_auth_properties
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        create:
+          implementation: openstack_plugin.access_and_security.ssh:create
+        delete:
+          implementation: openstack_plugin.access_and_security.ssh:delete
+
+##################################################################################################
+# OpenStack compute instance
+##################################################################################################
+
+  tosca.openstack.compute_instance:
+    derived_from: tosca.openstack.node
+    properties:
+      use_existing:
+        type: boolean
+        default: false
+        required: false
+      name:
+        type: string
+        required: true
+      image:
+        type: string
+        required: true
+      flavor:
+        type: string
+        required: true
+      management_network_name:
+        type: string
+        required: true
+      availability_zone:
+        type: string
+        required: false
+      node_pull_size:
+        type: int
+        default: 1
+        required: false
+      user_data:
+        type: string
+        required: false
+      config_drive:
+        type: boolean
+        default: true
+        required: false
+    attributes:
+      server:
+        type: map
+      status:
+        type: string
+    requirements:
+      - authorization_form:
+          capability: tosca.capabilities.Node
+          node: tosca.openstack.authorization_form
+          relationship: tosca.openstack.access_and_security.inject_auth_properties
+      - ssh_keypair:
+          capability: tosca.capabilities.Node
+          node: tosca.openstack.access_and_security.ssh_keypair
+          relationship: tosca.openstack.access_and_security.ssh_keypair_connected_to_compute
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: openstack_plugin.orchestration.compute:create
+          inputs:
+            task_retries: 10
+            task_retry_interval: 10
+        start:
+          implementation: openstack_plugin.orchestration.compute:start
+          inputs:
+            task_retries: 10
+            task_retry_interval: 10
+        stop:
+          implementation: openstack_plugin.orchestration.compute:stop
+          inputs:
+            task_retries: 10
+            task_retry_interval: 10
+        delete:
+          implementation: openstack_plugin.orchestration.compute:delete
+          inputs:
+            task_retries: 10
+            task_retry_interval: 10
+
+
+##################################################################################################
+# OpenStack Heat stack
+##################################################################################################
+
+  tosca.openstack.orchestrator.stack:
+    derived_from: tosca.openstack.node
+    properties:
+      name:
+        type: string
+        required: true
+      template_path:
+        type: string
+        required: true
+      stack_parameters:
+        type: map
+        required: false
+      auth_properties:
+        type: map
+        required: true
+    attributes:
+      stack:
+        type: map
+      outputs:
+        type: map
+      status:
+        type: string
+    requirements:
+      - authorization_form:
+          capability: tosca.capabilities.Node
+          node: tosca.openstack.authorization_form
+          relationship: tosca.openstack.access_and_security.inject_auth_properties
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        create:
+          implementation: openstack_plugin.orchestration.stacks:create
+          inputs:
+            task_retries: 10
+            task_retry_interval: 10
+        delete:
+          implementation: openstack_plugin.orchestration.stacks:delete
+          inputs:
+            task_retries: 10
+            task_retry_interval: 10
+
+##################################################################################################
+# OpenStack relationships
+##################################################################################################
+
+  tosca.openstack.access_and_security.ssh_keypair_connected_to_compute:
+    derived_from: tosca.openstack.relationships.node
+    interfaces:
+      Configure:
+        type: tosca.interfaces.relationship.Configure
+        link:
+          implementation: openstack_plugin.access_and_security.ssh:link_to_compute
+          inputs:
+            type: map
+        unlink:
+          implementation: openstack_plugin.access_and_security.ssh:unlink_to_compute
+          inputs:
+            type: map
+
+  tosca.openstack.access_and_security.inject_auth_properties:
+    derived_from: tosca.openstack.relationships.node
+    interfaces:
+      Configure:
+        type: tosca.interfaces.relationship.Configure
+        link:
+          implementation: openstack_plugin.access_and_security.authorization:inject
+          inputs:
+            type: map
+        unlink:
+          implementation: openstack_plugin.access_and_security.authorization:eject
+          inputs:
+            type: map

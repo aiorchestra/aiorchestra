@@ -1,0 +1,77 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: Attempts to create SSH keypair
+
+
+#####################################################################
+# Imports
+#####################################################################
+
+imports:
+
+  - /Users/denismakogon/Documents/Invader/aio-orchestra/aio-orchestra-openstack-plugin/types.yaml
+
+topology_template:
+#####################################################################
+# Inputs
+#####################################################################
+
+  inputs:
+
+    keystone_username:
+      type: string
+
+    keystone_password:
+      type: string
+
+    keystone_project_name:
+      type: string
+
+    keystone_url:
+      type: string
+
+    openstack_region:
+      type: string
+
+    ssh_keypair_name:
+      type: string
+
+#####################################################################
+# Node templates
+#####################################################################
+
+  node_templates:
+
+    authorization_form:
+      type: tosca.openstack.authorization_form
+      properties:
+        username: { get_input: keystone_username }
+        password: { get_input: keystone_password }
+        project_name:  { get_input: keystone_project_name }
+        auth_url:  { get_input: keystone_url }
+        region_name:  { get_input: openstack_region }
+
+    orchestra_keypair:
+      type: tosca.openstack.access_and_security.ssh_keypair
+      properties:
+        name: { get_input: ssh_keypair_name }
+      requirements:
+        - authorization_form: authorization_form
+
+    proxy_to_orchestra_keypair:
+      type: tosca.openstack.access_and_security.ssh_keypair
+      properties:
+        name: { get_property: [orchestra_keypair, name] }
+        use_existing: true
+      requirements:
+        - authorization_form: authorization_form
+      requirements:
+        - authorization_form: orchestra_keypair
+
+  outputs:
+    auth_token:
+      value: { get_attribute: [ authorization_form, auth_token ] }
+    ssh_pub:
+      value: { get_attribute: [orchestra_keypair, public_key] }
+    ssh_priv:
+      value: { get_attribute: [orchestra_keypair, private_key_content] }

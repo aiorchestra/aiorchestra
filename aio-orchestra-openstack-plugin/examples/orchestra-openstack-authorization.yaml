@@ -1,0 +1,60 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: Attempts to authorize to OpenStack
+
+
+#####################################################################
+# Imports
+#####################################################################
+
+imports:
+
+  - /Users/denismakogon/Documents/Invader/aio-orchestra/aio-orchestra-openstack-plugin/types.yaml
+
+topology_template:
+#####################################################################
+# Inputs
+#####################################################################
+
+  inputs:
+
+    keystone_username:
+      type: string
+      default: ''
+
+    keystone_password:
+      type: string
+      default: ''
+
+    keystone_project_name:
+      type: string
+      default: ''
+
+    keystone_url:
+      type: string
+      default: ''
+
+    openstack_region:
+      type: string
+      default: ''
+
+#####################################################################
+# Node templates
+#####################################################################
+
+  node_templates:
+
+    authorization_form:
+      type: tosca.openstack.authorization_form
+      properties:
+        username: { get_input: keystone_username }
+        password: { get_input: keystone_password }
+        project_name:  { get_input: keystone_project_name }
+        auth_url:  { get_input: keystone_url }
+        region_name:  { get_input: openstack_region }
+
+  outputs:
+    auth_token:
+      value: { get_attribute: [ authorization_form, auth_token ] }
+    auth_url:
+      value: { get_property: [ authorization_form, auth_url ] }
