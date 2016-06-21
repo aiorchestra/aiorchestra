@@ -20,7 +20,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setuptools.setup(
-    name='aio-orchestra',
+    name='aiorchestra',
     version='0.1',
     description='AsyncIO TOSCA orchestrator',
     long_description=read('README.rst'),
