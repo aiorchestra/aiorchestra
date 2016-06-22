@@ -16,7 +16,6 @@
 import asyncio
 import os
 import uvloop
-import sys
 
 import testtools
 
