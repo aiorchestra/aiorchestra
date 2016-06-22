@@ -184,15 +184,15 @@ class OrchestraContext(object):
             self.status = self.FAILED
             self.logger.error(str(ex))
             raise ex
-        self.logger.info('Deployment finished.'
-                         'context {0} with status "{1}".'
+        self.logger.info('Deployment "{0}" finished'
+                         ' with status "{1}".'
                          .format(self.name, self.status))
 
     async def undeploy(self):
         self.logger.info('Starting teardown process for deployment '
                          'context {0}.'.format(self.name))
         task_list = []
-        standard_events_order = ['stop', 'delete']
+        standard_events_order = ['delete', 'stop']
         for event in standard_events_order:
             task_list.extend(self._gather_events(event))
         if self.status in self.AVAILABLE_FOR_DESTRUCTION:

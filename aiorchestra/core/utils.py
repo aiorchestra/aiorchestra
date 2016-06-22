@@ -31,10 +31,12 @@ async def retry(fn, args=None, kwargs=None, exceptions=None,
 
     while task_retries > 0:
         try:
-            return fn(*args, **kwargs)
+            result = fn(*args, **kwargs)
+            if result:
+                return
         except Exception as e:
             if not exceptions or not isinstance(e, exceptions):
-                raise
+                raise e
         if task_retry_interval:
             await asyncio.sleep(task_retry_interval)
         task_retries -= 1
