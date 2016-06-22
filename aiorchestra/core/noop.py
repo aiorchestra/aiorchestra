@@ -22,7 +22,7 @@ async def noop(*args, **kwargs):
 
 @utils.operation
 async def link(source, target, inputs):
-    source.context.logger.info(
+    source.context.logger.debug(
         '[{0} {2} {1}] - Relationship implementation was not '
         'found, using stab for "{3}" event.'
         .format(target.name, source.name, '----->', 'link'))
@@ -31,7 +31,7 @@ async def link(source, target, inputs):
 
 @utils.operation
 async def unlink(source, target, inputs):
-    source.context.logger.info(
+    source.context.logger.debug(
         '[{0} {2} {1}] - Relationship implementation was not '
         'found, using stab for "{3}" event.'
         .format(target.name, source.name, '--X-->', 'unlink'))
