@@ -101,19 +101,20 @@ class InterfaceOperations(object):
         inputs = __current_events[event].get('inputs', {})
         return implementation, inputs
 
+    def __get_relationship_entity(self, target, source):
+        relationship_events = {n.name: rel.type
+                               for n, rel in source.node.related.items()}
+        return relationship_events[target.name]
+
     def __get_relationship_event(self, target, source, event):
-        reqs = source.type_definition.requirements
         custom_defs = source.custom_defs
-        for req in reqs:
-            for req_node_name, req_def in req.items():
-                _type = req_def['relationship']
-                if req_node_name == target.name and _type in custom_defs:
-                    impl_def = custom_defs[_type]['interfaces']['Configure']
-                    event_def = impl_def[event]
-                    return event_def['implementation'], event_def.get('inputs')
-                else:
-                    return RELATIONSHIP_STABS[event], {}
-        return RELATIONSHIP_STABS[event], {}
+        relationship = self.__get_relationship_entity(target, source)
+        if relationship in custom_defs:
+            impl_def = custom_defs[relationship]['interfaces']['Configure']
+            event_def = impl_def[event]
+            return event_def['implementation'], event_def.get('inputs')
+        else:
+            return RELATIONSHIP_STABS[event], {}
 
     def import_task_method(self, impl, event, node):
         if impl:
