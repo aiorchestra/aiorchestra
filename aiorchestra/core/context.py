@@ -250,13 +250,10 @@ class OrchestraContext(object):
                       logger=logger)
         context.status = __status
         _ns = []
-        for n in context.origin_nodes:
-            for s_n in nodes:
-                if n.name == s_n['__name']:
-                    _n = node.OrchestraNode.load(
-                        context, n, **s_n)
-                    _n.context = context
-                    _ns.append(_n)
+        for ser_n in nodes:
+            _node = context.node_from_name(ser_n['__name'])
+            _node.load(**ser_n)
+            _ns.append(_node)
         context.nodes = _ns
         context.__setup_deployment_plan()
         return context
