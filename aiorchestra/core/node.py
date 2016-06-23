@@ -416,6 +416,10 @@ class OrchestraNode(object):
     def runtime_properties(self):
         return self.__runtime_properties
 
+    @runtime_properties.setter
+    def runtime_properties(self, other):
+        self.__runtime_properties = other
+
     @property
     def has_parents(self):
         return True if len(self.child_nodes) > 0 else False
@@ -481,12 +485,10 @@ class OrchestraNode(object):
             'is_provisioned': self.__provisioned,
             '__properties': self.__properties,
             '__attributes': self.__attributes,
-            '__runtime_properties': self.__runtime_properties,
+            'runtime_properties': self.runtime_properties,
         }
 
-    @classmethod
-    def load(cls, context, tosca_node, **kwargs):
-        orchestra_node = cls(context, tosca_node)
+    def load(self, **kwargs):
         for k, v in kwargs.items():
-            setattr(orchestra_node, k, v)
-        return orchestra_node
+            setattr(self, k, v)
+        return self
