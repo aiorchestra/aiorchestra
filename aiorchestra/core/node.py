@@ -104,7 +104,7 @@ class InterfaceOperations(object):
     def __get_relationship_entity(self, target, source):
         relationship_events = {n.name: rel.type
                                for n, rel in source.node.related.items()}
-        return relationship_events[target.name]
+        return relationship_events.get(target.name)
 
     def __get_relationship_event(self, target, source, event):
         custom_defs = source.custom_defs
