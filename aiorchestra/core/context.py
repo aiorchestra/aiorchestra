@@ -189,7 +189,8 @@ class OrchestraContext(object):
                              ' with status "{1}".'
                              .format(self.name, self.status))
         else:
-            raise Exception('Unable to run deployment. PENDING status required.')
+            raise Exception('Unable to run deployment. '
+                            'PENDING status required.')
 
     async def undeploy(self):
         self.logger.info('Starting teardown process for deployment '
