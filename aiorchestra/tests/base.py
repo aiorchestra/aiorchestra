@@ -19,6 +19,7 @@ import uvloop
 
 import testtools
 
+from aiorchestra.core import context
 from aiorchestra.core import logger
 
 
@@ -40,6 +41,28 @@ def with_template(template_name):
     return action_wrapper
 
 
+def with_deployed(template_name, do_deploy=True, inputs=None):
+    def action_wrapper(action):
+        def wraps(*args, **kwargs):
+            self = list(args)[0]
+            path = os.path.join(self.tosca_directory, template_name)
+            c = context.OrchestraContext(
+                'simple_node_template',
+                path=path,
+                template_inputs=inputs,
+                logger=LOG,
+                event_loop=self.event_loop)
+            if do_deploy:
+                c.run_deploy()
+            new_args = list(args)
+            new_args.append(c)
+            action(*new_args, **kwargs)
+            if do_deploy:
+                c.run_undeploy()
+        return wraps
+    return action_wrapper
+
+
 class BaseAIOrchestraTestCase(testtools.TestCase):
     tosca_directory = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), 'templates')
@@ -52,3 +75,15 @@ class BaseAIOrchestraTestCase(testtools.TestCase):
     def tearDown(self):
         self.event_loop.close()
         super(BaseAIOrchestraTestCase, self).tearDown()
+
+    def assertTrue(self, compare_to):
+        self.assertEqual(True, compare_to)
+
+    def assertFalse(self, compare_to):
+        self.assertEqual(False, compare_to)
+
+    def assertNotEqual(self, what_to, compare_to):
+        self.assertTrue(what_to != compare_to)
+
+    def deserialize_context(self, data):
+        return context.OrchestraContext.load(LOG, self.event_loop, **data)
