@@ -118,7 +118,12 @@ class InterfaceOperations(object):
 
     def import_task_method(self, impl, event, node):
         if impl:
-            module, method = impl.split(":")
+            parts = impl.split(":")
+            if len(parts) != 2:
+                raise Exception('Invalid event implementation reference '
+                                'for event "{0}" of node "{1}".'
+                                .format(event, node.name))
+            module, method = parts
             m = importlib.import_module(module)
             try:
                 return getattr(m, method)

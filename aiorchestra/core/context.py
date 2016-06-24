@@ -172,21 +172,24 @@ class OrchestraContext(object):
         standard_events_order = ['create', 'configure', 'start']
         self.logger.info('Starting deployment process for deployment '
                          'context {0}.'.format(self.name))
-        for event in standard_events_order:
-            task_list.extend(self._gather_events(event))
-        try:
-            self.status = self.RUNNING
-            for coro in task_list:
-                await coro
-            self._assert_nodes_were_provisioned()
-            self.status = self.COMPLETED
-        except Exception as ex:
-            self.status = self.FAILED
-            self.logger.error(str(ex))
-            raise ex
-        self.logger.info('Deployment "{0}" finished'
-                         ' with status "{1}".'
-                         .format(self.name, self.status))
+        if self.status == self.PENDING:
+            for event in standard_events_order:
+                task_list.extend(self._gather_events(event))
+            try:
+                self.status = self.RUNNING
+                for coro in task_list:
+                    await coro
+                self._assert_nodes_were_provisioned()
+                self.status = self.COMPLETED
+            except Exception as ex:
+                self.status = self.FAILED
+                self.logger.error(str(ex))
+                raise ex
+            self.logger.info('Deployment "{0}" finished'
+                             ' with status "{1}".'
+                             .format(self.name, self.status))
+        else:
+            raise Exception('Unable to run deployment. PENDING status required.')
 
     async def undeploy(self):
         self.logger.info('Starting teardown process for deployment '

@@ -1,0 +1,158 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: Attempts to authorize to OpenStack
+
+node_types:
+
+##################################################################################################
+# AIOrchestra base node type
+##################################################################################################
+
+  tosca.test.node:
+    derived_from: tosca.nodes.Root
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        create:
+          implementation: aiorchestra.tests.plugin:is_not_coroutine
+          inputs:
+            type: map
+        start:
+          implementation: aiorchestra.tests.plugin:is_not_coroutine
+          inputs:
+            type: map
+        stop:
+          implementation: aiorchestra.tests.plugin:is_not_coroutine
+          inputs:
+            type: map
+        delete:
+          implementation: aiorchestra.tests.plugin:is_not_coroutine
+          inputs:
+            type: map
+        configure:
+          implementation: aiorchestra.tests.plugin:is_not_coroutine
+          inputs:
+            type: map
+
+  aiorchestra.node:
+    derived_from: tosca.test.node
+    properties:
+      name:
+        type: string
+      my_type:
+        type: string
+        default: 'tosca.test.node'
+    attributes:
+      name:
+        type: string
+      my_type:
+        type: string
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        create:
+          implementation: aiorchestra.tests.plugin:create
+          inputs:
+            type: map
+        start:
+          implementation: aiorchestra.tests.plugin:is_not_coroutine
+          inputs:
+            type: map
+        stop:
+          implementation: aiorchestra.tests.plugin:is_not_coroutine
+          inputs:
+            type: map
+        delete:
+          implementation: aiorchestra.tests.plugin:is_not_coroutine
+          inputs:
+            type: map
+        configure:
+          implementation: aiorchestra.tests.plugin:is_not_coroutine
+          inputs:
+            type: map
+
+  aiorchestra.node.dependent:
+    derived_from: tosca.test.node
+    properties:
+      name:
+        type: string
+    attributes:
+      name:
+        type: string
+    requirements:
+      - requirement:
+          capability: tosca.capabilities.Node
+          node: aiorchestra.node
+          relationship: tosca.test.relationships.node
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        create:
+          implementation: aiorchestra.tests.plugin:create
+          inputs:
+            type: map
+        start:
+          implementation: aiorchestra.tests.plugin:start
+          inputs:
+            type: map
+        stop:
+          implementation: aiorchestra.tests.plugin:stop
+          inputs:
+            type: map
+        delete:
+          implementation: aiorchestra.tests.plugin:delete
+          inputs:
+            type: map
+        configure:
+          implementation: aiorchestra.tests.plugin:configure
+          inputs:
+            type: map
+
+##################################################################################################
+# AIOrchestra base relationship node type
+##################################################################################################
+
+  tosca.test.relationships.operations:
+    derived_from: tosca.interfaces.relationship.Configure
+    link:
+      implementation: aiorchestra.tests.plugin:link
+      inputs:
+        type: map
+    unlink:
+      implementation: aiorchestra.tests.plugin:unlink
+      inputs:
+        type: map
+
+  tosca.test.relationships.node:
+    derived_from: tosca.relationships.Root
+    interfaces:
+      Configure:
+        type: tosca.interfaces.relationship.Configure
+        link:
+          implementation: aiorchestra.tests.plugin:link
+          inputs:
+            type: map
+        unlink:
+          implementation: aiorchestra.tests.plugin:unlink
+          inputs:
+            type: map
+
+topology_template:
+
+  node_templates:
+
+##################################################################################################
+# AIOrchestra node template
+##################################################################################################
+
+    test_node:
+      type: aiorchestra.node
+      properties:
+        name: 'test_node'
+
+    dependent_node:
+      type: aiorchestra.node.dependent
+      properties:
+        name: 'dependent_node'
+      requirements:
+        - requirement: test_node

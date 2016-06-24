@@ -1,0 +1,63 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: Attempts to authorize to OpenStack
+
+node_types:
+
+##################################################################################################
+# AIOrchestra base node type
+##################################################################################################
+
+  tosca.test.node:
+    derived_from: tosca.nodes.Root
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        create:
+          implementation: aiorchestra.core.noop:noop
+          inputs:
+            type: map
+        start:
+          implementation: aiorchestra.core.noop:noop
+          inputs:
+            type: map
+        stop:
+          implementation: aiorchestra.core.noop:noop
+          inputs:
+            type: map
+        delete:
+          implementation: aiorchestra.core.noop:noop
+          inputs:
+            type: map
+        configure:
+          implementation: aiorchestra.core.noop:noop
+          inputs:
+            type: map
+
+  aiorchestra.invalid_implementation.node:
+    derived_from: tosca.test.node
+    properties:
+      name:
+        type: string
+    attributes:
+      name:
+        type: string
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        create:
+          implementation: module
+
+
+topology_template:
+
+  node_templates:
+
+##################################################################################################
+# AIOrchestra invalid node template
+##################################################################################################
+
+    test_node:
+      type: aiorchestra.invalid_implementation.node
+      properties:
+        name: 'test_node'
