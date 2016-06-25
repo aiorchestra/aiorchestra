@@ -31,7 +31,7 @@ async def retry(fn, args=None, kwargs=None, exceptions=None,
 
     while task_retries > 0:
         try:
-            result = fn(*args, **kwargs)
+            result = await fn(*args, **kwargs)
             if result:
                 return
         except Exception as e:

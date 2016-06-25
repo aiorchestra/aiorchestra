@@ -128,20 +128,20 @@ class OrchestraContext(object):
             return
 
         for orchestra_node in self.nodes:
-            self.logger.info('Retrieving deployment dependencies '
-                             'and building deployment task sequence for '
-                             'node {0} of TOSCA template {1} context.'
-                             .format(orchestra_node.name, self.name))
+            self.logger.debug('Retrieving deployment dependencies '
+                              'and building deployment task sequence for '
+                              'node {0} of TOSCA template {1} context.'
+                              .format(orchestra_node.name, self.name))
             recursive_dependency_collector(orchestra_node)
             deps = list(reversed(deps))
-            self.logger.info('Node {0} has "{1}" deployment task sequence.'
-                             .format(orchestra_node.name, ", "
-                                     .join([str(n) for n in deps])))
             filtered = []
             for dep in deps:
                 if dep.name not in [n.name for n in filtered]:
                     filtered.append(dep)
             deps_by_node[orchestra_node] = filtered
+            self.logger.debug('Node {0} has "{1}" deployment task sequence.'
+                              .format(orchestra_node.name, ", "
+                                      .join([str(n) for n in filtered])))
             deps = []
 
         self.__deployment_plan = deps_by_node
