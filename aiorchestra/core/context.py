@@ -137,8 +137,13 @@ class OrchestraContext(object):
             self.logger.info('Node {0} has "{1}" deployment task sequence.'
                              .format(orchestra_node.name, ", "
                                      .join([str(n) for n in deps])))
-            deps_by_node[orchestra_node] = deps
+            filtered = []
+            for dep in deps:
+                if dep.name not in [n.name for n in filtered]:
+                    filtered.append(dep)
+            deps_by_node[orchestra_node] = filtered
             deps = []
+
         self.__deployment_plan = deps_by_node
 
     @property

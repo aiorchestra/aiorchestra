@@ -104,7 +104,16 @@ class InterfaceOperations(object):
     def __get_relationship_entity(self, target, source):
         relationship_events = {n.name: rel.type
                                for n, rel in source.node.related.items()}
-        return relationship_events.get(target.name)
+        _required_nodes = [list(node.values())[0]
+                           for node in source.node._requirements]
+        rel_mapping = {}
+        for _req in _required_nodes:
+            if isinstance(_req, str):
+                rel_mapping[_req] = relationship_events[_req]
+            elif isinstance(_req, dict):
+                rel_mapping[_req['node']] = _req['relationship']
+
+        return rel_mapping.get(target.name)
 
     def __get_relationship_event(self, target, source, event):
         custom_defs = source.custom_defs
@@ -431,7 +440,13 @@ class OrchestraNode(object):
 
     @property
     def parent_nodes(self):
-        return [node.name for node in list(self.node.related_nodes)]
+        required = []
+        for node in [list(n.values())[0] for n in self.node._requirements]:
+            if isinstance(node, str):
+                required.append(node)
+            elif isinstance(node, dict):
+                required.append(node['node'])
+        return required
 
     @property
     def has_children(self):
