@@ -91,7 +91,7 @@ class InterfaceOperations(object):
             msg = ('{0} lifecycle event "delete" was not defined. '
                    'No way to delete provisioned node "{1}" instance.'
                    .format(lifecycle_type, node.name))
-            self.context.logger.warn(msg)
+            self.context.logger.debug(msg)
 
     @check_for_event_definition
     def __get_standard_event(self, node, event):
@@ -369,9 +369,8 @@ class OrchestraNode(object):
 
     def attempt_to_validate(self):
         try:
-            self.context.logger.info(
-                "Validating properties for node {0}.".format(self.name))
-            self.node.validate()
+            self.context.logger.debug(
+                'Validating properties for node "{0}".'.format(self.name))
             self.properties
             self.attributes
         except Exception as ex:
