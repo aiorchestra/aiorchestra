@@ -146,7 +146,12 @@ class OrchestraContext(object):
                                       .join([str(n) for n in filtered])))
             deps = []
 
-        self.__deployment_plan = deps_by_node
+        d = collections.OrderedDict()
+        deps_by_node_new = sorted(
+            deps_by_node, key=lambda k: len(deps_by_node[k]))
+        for item in deps_by_node_new:
+            d[item] = deps_by_node[item]
+        self.__deployment_plan = d
 
     @property
     def deployment_plan(self):
