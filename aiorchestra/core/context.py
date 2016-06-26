@@ -48,7 +48,9 @@ class OrchestraContext(object):
         else:
             self.logger = logger
         if not event_loop:
+            uv_loop = uvloop.new_event_loop()
             asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+            asyncio.set_event_loop(uv_loop)
             self.event_loop = asyncio.get_event_loop()
         else:
             self.event_loop = event_loop
