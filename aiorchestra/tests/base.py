@@ -46,6 +46,8 @@ def with_deployed(template_name, do_deploy=True, inputs=None):
         def wraps(*args, **kwargs):
             self = list(args)[0]
             path = os.path.join(self.tosca_directory, template_name)
+            LOG.info('Test: {0}. Inputs: {1}.'
+                     .format(action.__name__, inputs))
             c = context.OrchestraContext(
                 action.__name__,
                 path=path,
