@@ -27,7 +27,7 @@ setuptools.setup(
     url='https://aiorchestra.io/',
     author='Denys Makogon',
     author_email='lildee1991@gmail.com',
-    packages=setuptools.find_packages(exclude=['aiorchestra.tests', ]),
+    packages=setuptools.find_packages(),
     install_requires=[
         'uvloop',
         'tosca-parser',
