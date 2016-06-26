@@ -70,8 +70,9 @@ class BaseAIOrchestraTestCase(testtools.TestCase):
         os.path.dirname(os.path.abspath(__file__)), 'templates')
 
     def setUp(self):
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        self.event_loop = asyncio.new_event_loop()
+        loop = uvloop.new_event_loop()
+        asyncio.set_event_loop(loop)
+        self.event_loop = asyncio.get_event_loop()
         super(BaseAIOrchestraTestCase, self).setUp()
 
     def tearDown(self):
