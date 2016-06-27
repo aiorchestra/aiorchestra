@@ -33,7 +33,7 @@ async def retry(fn, args=None, kwargs=None, exceptions=None,
         try:
             result = await fn(*args, **kwargs)
             if result:
-                return
+                return result
         except Exception as e:
             if not exceptions or not isinstance(e, exceptions):
                 raise e
