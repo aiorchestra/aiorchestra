@@ -99,6 +99,14 @@ class InterfaceOperations(object):
             'Standard')
         implementation = __current_events[event]['implementation']
         inputs = __current_events[event].get('inputs', {})
+        if 'interfaces' in node.node.entity_tpl:
+            node_events = node.node.entity_tpl[
+                'interfaces']['Standard']
+            if event in node_events:
+                node_event = node_events[event]
+                template_inputs = node_event.get('inputs', {})
+                implementation = node_event.get('implementation')
+                inputs.update(template_inputs)
         return implementation, inputs
 
     def __get_relationship_entity(self, target, source):
