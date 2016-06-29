@@ -41,7 +41,10 @@ def with_template(template_name):
     return action_wrapper
 
 
-def with_deployed(template_name, do_deploy=True, inputs=None):
+def with_deployed(template_name,
+                  do_deploy=True,
+                  inputs=None,
+                  enable_rollback=False):
     def action_wrapper(action):
         def wraps(*args, **kwargs):
             self = list(args)[0]
@@ -53,7 +56,9 @@ def with_deployed(template_name, do_deploy=True, inputs=None):
                 path=path,
                 template_inputs=inputs,
                 logger=LOG,
-                event_loop=self.event_loop)
+                event_loop=self.event_loop,
+                enable_rollback=enable_rollback,
+            )
             if do_deploy:
                 c.run_deploy()
             new_args = list(args)

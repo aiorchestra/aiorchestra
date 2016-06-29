@@ -17,6 +17,7 @@ from aiorchestra.core import utils
 
 @utils.operation
 async def create(node, inputs):
+    node.context.logger.info('[{0}] - Created.'.format(node.name))
     node.batch_update_runtime_properties(**{
         'created': True,
         'name': node.name,
@@ -27,13 +28,23 @@ async def create(node, inputs):
 
 @utils.operation
 async def start(node, inputs):
+    node.context.logger.info('[{0}] - Started.'.format(node.name))
     node.batch_update_runtime_properties(**{
         'started': True,
     })
 
 
 @utils.operation
+async def fail_start(node, inputs):
+    node.context.logger.info('[{0}] - Now i will raise exception '
+                             'and rollback should work.'
+                             .format(node.name))
+    raise Exception('i must fail.')
+
+
+@utils.operation
 async def stop(node, inputs):
+    node.context.logger.info('[{0}] - Stopped.'.format(node.name))
     node.batch_update_runtime_properties(**{
         'stopped': False,
     })
@@ -41,6 +52,7 @@ async def stop(node, inputs):
 
 @utils.operation
 async def delete(node, inputs):
+    node.context.logger.info('[{0}] - Deleted.'.format(node.name))
     node.batch_update_runtime_properties(**{
         'deleted': True,
     })
@@ -48,6 +60,7 @@ async def delete(node, inputs):
 
 @utils.operation
 async def configure(node, inputs):
+    node.context.logger.info('[{0}] - Configured.'.format(node.name))
     node.batch_update_runtime_properties(**{
         'configured': True,
     })
