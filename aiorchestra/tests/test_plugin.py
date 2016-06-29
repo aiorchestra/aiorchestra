@@ -59,3 +59,8 @@ class TestPlugin(base.BaseAIOrchestraTestCase):
         ex = self.assertRaises(Exception, context.run_deploy)
         self.assertIn("object NoneType can't be used in "
                       "'await' expression", str(ex))
+
+    @base.with_deployed('simple_template_for_rollback_test.yaml',
+                        do_deploy=True, enable_rollback=True)
+    def test_rollback(self, context):
+        pass

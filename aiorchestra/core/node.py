@@ -17,6 +17,8 @@ import sys
 
 from toscaparser import functions
 
+from aiorchestra.core import noop
+
 RELATIONSHIP_STABS = {
     'link': 'aiorchestra.core.noop:link',
     'unlink': 'aiorchestra.core.noop:unlink',
@@ -44,23 +46,29 @@ def check_for_event_definition(action):
 
 def lifecycle_event_handler(action):
 
+    deploy_actions = ['create', 'configure', 'start']
+    undeploy_actions = ['stop', 'delete']
+
     async def wraps(*args, **kwargs):
         self = list(args)[0]
         self.context.logger.debug('Attempting to run {0} event for '
                                   'node {1}.'
                                   .format(action.__name__, self.name))
         try:
-            if action.__name__ in ['create', 'configure', 'start']:
-                self.__provisioned = True
-            else:
-                self.__provisioned = False
+            if action.__name__ in undeploy_actions:
+                if self.context.rollback_enabled:
+                    if not self.is_provisioned:
+                        self.context.logger.info(
+                            '[{0}] - Unable to rollback node '
+                            'because it was not provisioned.'.format(self.name))
+                        await noop.noop(*args, **kwargs)
             result = action(*args, **kwargs)
             self.context.logger.debug('Event {0} finished successfully for '
                                       'node {1}.'
                                       .format(action.__name__, self.name))
             await result
         except Exception as ex:
-            self.__provisioned = False
+            self.is_provisioned = False
             self.context.logger.error(str(ex))
             raise ex
 
@@ -479,17 +487,15 @@ class OrchestraNode(object):
                 await target.link(self)
 
         await self.operations.run_standard_event(self, 'create')
-        self.__provisioned = True
+        self.is_provisioned = True
 
     @lifecycle_event_handler
     async def configure(self):
         await self.operations.run_standard_event(self, 'configure')
-        self.__provisioned = True
 
     @lifecycle_event_handler
     async def start(self):
         await self.operations.run_standard_event(self, 'start')
-        self.__provisioned = True
 
     @lifecycle_event_handler
     async def stop(self):
@@ -501,7 +507,7 @@ class OrchestraNode(object):
         for target in self.context.deployment_plan[self]:
             if target.name != self.name:
                 await target.unlink(self)
-        self.__provisioned = False
+        self.is_provisioned = False
 
     def __repr__(self):
         return 'Node {0}'.format(self.name)

@@ -31,7 +31,8 @@ class OrchestraContext(object):
     def __init__(self, name, path=None,
                  template_inputs=None,
                  logger=None,
-                 event_loop=None):
+                 event_loop=None,
+                 enable_rollback=False):
         self.__name = name
         self._tmplt = tosca_template.ToscaTemplate(path=path, a_file=True)
         self.__path = path
@@ -57,6 +58,7 @@ class OrchestraContext(object):
         self.__orchestra_nodes = [node.OrchestraNode(self, origin_node)
                                   for origin_node in self.origin_nodes]
         self.__deployment_plan = None
+        self.rollback_enabled = enable_rollback
 
     @property
     def outputs(self):
@@ -196,7 +198,11 @@ class OrchestraContext(object):
             except Exception as ex:
                 self.status = self.FAILED
                 self.logger.error(str(ex))
-                raise ex
+                if not self.rollback_enabled:
+                    raise ex
+                else:
+                    self.logger.info('Rollback enabled, no need '
+                                     'to raise exception.')
             self.logger.info('Deployment "{0}" finished'
                              ' with status "{1}".'
                              .format(self.name, self.status))
@@ -211,7 +217,9 @@ class OrchestraContext(object):
         standard_events_order = ['delete', 'stop']
         for event in standard_events_order:
             task_list.extend(self._gather_events(event))
-        if self.status in self.AVAILABLE_FOR_DESTRUCTION:
+        is_able = (self.status in self.AVAILABLE_FOR_DESTRUCTION if
+                   not self.rollback_enabled else self.rollback_enabled)
+        if is_able:
             self.logger.info('Destroying deployment {0}'.format(self.name))
             if not self._assert_nodes_were_provisioned():
                 msg = ('Unable to destroy deployment "{0}" because of the '
