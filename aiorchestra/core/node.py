@@ -46,7 +46,6 @@ def check_for_event_definition(action):
 
 def lifecycle_event_handler(action):
 
-    deploy_actions = ['create', 'configure', 'start']
     undeploy_actions = ['stop', 'delete']
 
     async def wraps(*args, **kwargs):
@@ -60,7 +59,8 @@ def lifecycle_event_handler(action):
                     if not self.is_provisioned:
                         self.context.logger.info(
                             '[{0}] - Unable to rollback node '
-                            'because it was not provisioned.'.format(self.name))
+                            'because it was not provisioned.'
+                            .format(self.name))
                         await noop.noop(*args, **kwargs)
             result = action(*args, **kwargs)
             self.context.logger.debug('Event {0} finished successfully for '
