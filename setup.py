@@ -21,7 +21,7 @@ def read(fname):
 
 setuptools.setup(
     name='aiorchestra',
-    version='0.1.1',
+    version='0.1.2',
     description='AsyncIO TOSCA orchestrator',
     long_description=read('README.rst'),
     url='https://aiorchestra.io/',
