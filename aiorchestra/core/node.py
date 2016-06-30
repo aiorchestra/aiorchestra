@@ -17,7 +17,6 @@ import sys
 
 from toscaparser import functions
 
-from aiorchestra.core import noop
 
 RELATIONSHIP_STABS = {
     'link': 'aiorchestra.core.noop:link',
@@ -61,7 +60,7 @@ def lifecycle_event_handler(action):
                             '[{0}] - Unable to rollback node '
                             'because it was not provisioned.'
                             .format(self.name))
-                        return  # await noop.noop(*args, **kwargs)
+                        return
             result = action(*args, **kwargs)
             self.context.logger.debug('Event {0} finished successfully for '
                                       'node {1}.'
