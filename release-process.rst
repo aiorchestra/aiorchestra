@@ -4,8 +4,10 @@ Release process
 Run tests on target brunch
 --------------------------
 
-tox -epep8
-tox -epy35
+Steps::
+
+    tox -epep8
+    tox -epy35
 
 
 Decleare package version
@@ -18,20 +20,25 @@ In setup.py bump version to the next::
 Cut off stable branch
 ---------------------
 
-git checkout -b vX.X.X-stable
-git push origin vX.X.X-stable
+Steps::
+
+    git checkout -b vX.X.X-stable
+    git push origin vX.X.X-stable
 
 
 Create GitHub tag
 -----------------
 
-Releases ---> Draft New Release
+Steps::
 
-Name: AIOrchestra version X.X.X stable release
+    Releases ---> Draft New Release
+    Name: AIOrchestra version X.X.X stable release
 
 
 Collect changes from previous version
 -------------------------------------
+
+Steps::
 
     git log --oneline --decorate
 
@@ -39,11 +46,15 @@ Collect changes from previous version
 Build distribution package
 --------------------------
 
+Steps::
+
     python setup.py bdist_wheel
 
 
 Check install capability for the whell
 --------------------------------------
+
+Steps::
 
     virtualenv .test_venv
     source .test_venv/bin/activate
@@ -52,6 +63,8 @@ Check install capability for the whell
 
 Submit release to PYPI
 ----------------------
+
+Steps::
 
     python setup.py bdist_wheel register
     python setup.py bdist_wheel upload
