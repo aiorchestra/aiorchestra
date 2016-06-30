@@ -197,7 +197,6 @@ class OrchestraContext(object):
                 self.status = self.COMPLETED
             except Exception as ex:
                 self.status = self.FAILED
-                self.logger.error(str(ex))
                 if not self.rollback_enabled:
                     raise ex
                 else:
@@ -242,7 +241,6 @@ class OrchestraContext(object):
             msg = ('Unable to delete deployment because it '
                    'is not in appropriate status, current "{0}".'
                    .format(self.status))
-            self.logger.error(msg)
             raise Exception(msg)
 
     def run_deploy(self):
