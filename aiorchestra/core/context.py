@@ -34,7 +34,9 @@ class OrchestraContext(object):
                  event_loop=None,
                  enable_rollback=False):
         self.__name = name
-        self._tmplt = tosca_template.ToscaTemplate(path=path, a_file=True)
+        self._tmplt = tosca_template.ToscaTemplate(
+            path=path, a_file=True,
+            parsed_params=template_inputs)
         self.__path = path
         self.origin_nodes = self._tmplt.graph.nodetemplates
         self.vertices = self._tmplt.graph.vertices

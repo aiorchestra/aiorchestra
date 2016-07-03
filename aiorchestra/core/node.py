@@ -17,6 +17,8 @@ import sys
 
 from toscaparser import functions
 
+from aiorchestra.core import noop
+
 
 RELATIONSHIP_STABS = {
     'link': 'aiorchestra.core.noop:link',
@@ -60,7 +62,7 @@ def lifecycle_event_handler(action):
                             '[{0}] - Unable to rollback node '
                             'because it was not provisioned.'
                             .format(self.name))
-                        return
+                        return await noop.noop(*args, **kwargs)
             result = action(*args, **kwargs)
             self.context.logger.debug('Event {0} finished successfully for '
                                       'node {1}.'
@@ -168,7 +170,6 @@ class InterfaceOperations(object):
         if task:
             await task(node, inputs)
 
-    # TODO(denismakogon): re-write it
     async def run_relationship_event(self, target, source, event):
         impl, inputs = self.__get_relationship_event(target, source, event)
         task = self.import_task_method(impl, event, source)
@@ -212,6 +213,64 @@ class OrchestraNode(object):
     @property
     def property_definishion(self):
         return self.__prop_def
+
+    def has_capability(self, capability_type):
+        return capability_type in [
+            cap.type for cap in self.capabilities]
+
+    @property
+    def capabilities(self):
+        return self.node._capabilities
+
+    def get_capability(self, name):
+        self.context.logger.info(
+            '[{0}] - Processing capability '
+            '"{1}" by its type.'
+            .format(self.name, name))
+        for cap in self.capabilities:
+            if cap.name == name:
+                return cap._properties
+
+    @property
+    def artifacts(self):
+        return self.node.entity_tpl.get('artifacts', [])
+
+    def get_artifact_from_type(self, atype):
+        self.context.logger.info(
+            '[{0}] - Processing artifact '
+            '"{1}" by its type.'
+            .format(self.name, atype))
+        artifacts = []
+        for artifact in self.artifacts:
+            details = self.get_artifact_by_name(artifact)
+            if details:
+                if details['type'] == atype:
+                    artifacts.append(details)
+        return artifacts
+
+    # Addresses bug in parser
+    # https://bugs.launchpad.net/tosca-parser/+bug/1598130
+    def get_artifact_by_name(self, name):
+        self.context.logger.info(
+            '[{0}] - Processing artifact "{1}".'
+            .format(self.name, name))
+        if name in self.artifacts:
+            artifact = self.artifacts[name]
+            for k, v in artifact.items():
+                if functions.is_function(v):
+                    func = functions.get_function(
+                            self.context._tmplt, self.node, v)
+                    del artifact[k][func.name]
+                    if not isinstance(func, functions.GetInput):
+                        raise Exception('[{0}] - Unsupported intrinsic '
+                                        'function "{1}" for '
+                                        'artifact definition.'
+                                        .format(self.name, func.name))
+                    value = self.context.template_inputs[
+                        func.input_name]
+                    artifact.update(
+                        {k: value})
+            return artifact
 
     # TODO(denismakogon): define OrchestraNodeProperties class
     def __setup_properties(self):
