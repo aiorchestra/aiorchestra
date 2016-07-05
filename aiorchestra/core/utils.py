@@ -59,5 +59,6 @@ def operation(action):
                 '[{0}] - error during task "{1}" execution. '
                 'Reason: {2}.'
                 .format(source.name, action.__name__, str(ex)))
-            raise ex
+            if not source.context.rollback_enabled:
+                raise ex
     return wraps

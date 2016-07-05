@@ -223,23 +223,47 @@ class OrchestraNode(object):
         return self.node._capabilities
 
     def get_capability(self, name):
-        self.context.logger.info(
-            '[{0}] - Processing capability '
-            '"{1}" by its type.'
-            .format(self.name, name))
         for cap in self.capabilities:
             if cap.name == name:
+                cap_def = cap._properties
+                for prop_name, prop_value in cap_def.items():
+                    if functions.is_function(prop_value):
+                        value = self.__process_tosca_function_result(
+                            prop_value)
+                        cap_def[prop_name] = value
                 return cap._properties
+
+    def __process_tosca_function_result(self, tosca_function_def_dict):
+        func = functions.get_function(
+            self.context._tmplt, self.node, tosca_function_def_dict)
+        if isinstance(func, functions.GetInput):
+            if (func.input_name in
+                    self.context.template_inputs):
+                value = self.context.template_inputs[
+                    func.input_name]
+                return value
+        elif isinstance(func, functions.GetAttribute):
+            ref_node = self.context.node_from_name(
+                func.node_template_name)
+            if ref_node.is_provisioned:
+                if (func.attribute_name in
+                        ref_node.attributes):
+                    value = ref_node.attributes[
+                        func.attribute_name]
+                    return value
+        elif isinstance(func, functions.GetProperty):
+            ref_node = self.context.node_from_name(
+                func.node_template_name)
+            if func.property_name in ref_node.properties:
+                value = ref_node.properties[
+                    func.property_name]
+                return value
 
     @property
     def artifacts(self):
         return self.node.entity_tpl.get('artifacts', [])
 
     def get_artifact_from_type(self, atype):
-        self.context.logger.info(
-            '[{0}] - Processing artifact '
-            '"{1}" by its type.'
-            .format(self.name, atype))
         artifacts = []
         for artifact in self.artifacts:
             details = self.get_artifact_by_name(artifact)
@@ -251,9 +275,6 @@ class OrchestraNode(object):
     # Addresses bug in parser
     # https://bugs.launchpad.net/tosca-parser/+bug/1598130
     def get_artifact_by_name(self, name):
-        self.context.logger.info(
-            '[{0}] - Processing artifact "{1}".'
-            .format(self.name, name))
         if name in self.artifacts:
             artifact = self.artifacts[name]
             for k, v in artifact.items():
@@ -520,6 +541,25 @@ class OrchestraNode(object):
             elif isinstance(node, dict):
                 required.append(node['node'])
         return required
+
+    def get_requirement_capability(self, target):
+        cap_def = {}
+        for req in self.node._requirements:
+            for _, req_def in req.items():
+                if isinstance(req_def, dict):
+                    if req_def['node'] == target.name:
+                        cap_def = req_def.get('capability',
+                                              {'properties': {}})
+                        del cap_def['type']
+                        props = cap_def['properties']
+                        for prop, value in props.items():
+                            if functions.is_function(value):
+                                new_value = (
+                                    self.__process_tosca_function_result(
+                                        value))
+                                props[prop] = new_value
+                        return cap_def['properties']
+        return cap_def
 
     @property
     def has_children(self):
