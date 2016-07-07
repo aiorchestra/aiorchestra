@@ -13,12 +13,12 @@ Contents:
 
    introduction
    design
-   context_api
    context_api_description
-   node_api
    node_api_description
-   plugins_api
    plugins_api_description
+   context_api
+   node_api
+   plugins_api
 
 
 Indices and tables

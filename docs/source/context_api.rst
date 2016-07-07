@@ -1,7 +1,9 @@
+.. py:module:: aiorchestra.core.context
+
 AIOrchestra Context API
 =======================
 
-
-.. autoclass:: aiorchestra.core.context.OrchestraContext
+OrchestraContext
+----------------
+.. autoclass:: OrchestraContext
     :members:
-

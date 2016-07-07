@@ -1,5 +1,5 @@
-AIOrchestra Plugins API
-=======================
+AIOrchestra Plugins API description
+===================================
 
 
 Plugin
