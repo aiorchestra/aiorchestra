@@ -14,7 +14,12 @@
 
 import asyncio
 import collections
-import uvloop
+
+try:
+    import uvloop
+except ImportError:
+    uvloop = None
+
 
 from toscaparser import tosca_template
 
@@ -66,9 +71,10 @@ class OrchestraContext(object):
         else:
             self.logger = logger
         if not event_loop:
-            uv_loop = uvloop.new_event_loop()
-            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-            asyncio.set_event_loop(uv_loop)
+            if uvloop:
+                uv_loop = uvloop.new_event_loop()
+                asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+                asyncio.set_event_loop(uv_loop)
             self.event_loop = asyncio.get_event_loop()
         else:
             self.event_loop = event_loop
