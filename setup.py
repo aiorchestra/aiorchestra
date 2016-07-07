@@ -29,7 +29,7 @@ setuptools.setup(
     author_email='lildee1991@gmail.com',
     packages=setuptools.find_packages(),
     install_requires=[
-        'uvloop',
+        # 'uvloop',
         'tosca-parser',
         'requests',
         # required until new version of
