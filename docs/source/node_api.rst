@@ -1,6 +1,9 @@
+.. py:module:: aiorchestra.core.node
+
 AIOrchestra Node API
 ====================
 
-
-.. autoclass:: aiorchestra.core.node.OrchestraNode
+OrchestraNode class
+-------------------
+.. autoclass:: OrchestraNode
     :members:

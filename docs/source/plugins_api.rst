@@ -1,8 +1,12 @@
+.. py:module:: aiorchestra.core.utils
+
 AIOrchestra Plugins API
 =======================
 
+async operation decorator
+-------------------------
+.. autofunction:: operation
 
-.. autofunction:: aiorchestra.core.utils.operation
-
-.. autofunction:: aiorchestra.core.utils.retry
-
+async retry coroutine
+---------------------
+.. autofunction:: retry
