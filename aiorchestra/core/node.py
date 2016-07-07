@@ -180,6 +180,13 @@ class InterfaceOperations(object):
 class OrchestraNode(object):
 
     def __init__(self, context, node):
+        """
+        Create an instance of an advanved TOSCA graph node
+        :param context: OrchestraContext instance
+        :type context: aiorchestra.core.context.OrchestraContext
+        :param node: TOSCA graph node
+        :type node: toscaparser.nodetemplate.NodeTemplate
+        """
         self.context = context
         self.node = node
         self.operations = InterfaceOperations(context, node)
@@ -196,33 +203,84 @@ class OrchestraNode(object):
 
     @property
     def custom_defs(self):
+        """
+        Represents TOSCA graph custom type definitions
+
+        :return: a mapping of custom data types
+        :rtype: dict
+        """
         return self.__custom_defs
 
     @property
     def node_type_definition(self):
+        """
+        Represents current node type definition
+
+        :return: node type definition
+        :rtype: dict
+        """
         return self.__node_type_def
 
     @property
     def node_type(self):
+        """
+        Represents node type
+
+        :return: node type
+        :rtype: str
+        """
         return self.__node_type
 
     @property
     def type_definition(self):
+        """
+        Return node type definition
+
+        :return: node type definition
+        :rtype: toscaparser.entity_template.EntityTemplate
+        """
         return self.__type_defs
 
     @property
     def property_definishion(self):
+        """
+        Represents node properties definition
+
+        :return: node properties
+        :rtype: dict
+        """
         return self.__prop_def
 
     def has_capability(self, capability_type):
+        """
+        Checks if node has capability
+
+        :param capability_type: node capability type
+        :return: weather node has capability or not
+        :rtype: bool
+        """
         return capability_type in [
             cap.type for cap in self.capabilities]
 
     @property
     def capabilities(self):
+        """
+        Represents node capabilities
+
+        :return: a list of capabilities
+        :rtype: list
+        """
         return self.node._capabilities
 
     def get_capability(self, name):
+        """
+        Return specific node capability by its name
+
+        :param name: capability name
+        :type name: str
+        :return: capability
+        :rtype: dict
+        """
         for cap in self.capabilities:
             if cap.name == name:
                 cap_def = cap._properties
@@ -261,20 +319,40 @@ class OrchestraNode(object):
 
     @property
     def artifacts(self):
+        """
+        Represents node artifacts
+
+        :return: node artifacts
+        """
         return self.node.entity_tpl.get('artifacts', [])
 
-    def get_artifact_from_type(self, atype):
+    def get_artifact_from_type(self, artifact_type):
+        """
+        Returns artifacts from type
+
+        :param artifact_type: artifact type
+        :type artifact_type: str
+        :return: artifact
+        :rtype: list
+        """
         artifacts = []
         for artifact in self.artifacts:
             details = self.get_artifact_by_name(artifact)
             if details:
-                if details['type'] == atype:
+                if details['type'] == artifact_type:
                     artifacts.append(details)
         return artifacts
 
     # Addresses bug in parser
     # https://bugs.launchpad.net/tosca-parser/+bug/1598130
     def get_artifact_by_name(self, name):
+        """
+        Return artifact from its name
+
+        :param name: artifact name
+        :type name: str
+        :return:
+        """
         if name in self.artifacts:
             artifact = self.artifacts[name]
             for k, v in artifact.items():
@@ -414,6 +492,14 @@ class OrchestraNode(object):
             self.name, str(self.__properties)))
 
     def process_output(self, node_output_definition):
+        """
+        Processes node outputs
+
+        :param node_output_definition: TOSCA function def
+        :type node_output_definition: toscaparser.functions.Function
+        :return: node output value
+        :rtype: object
+        """
         if not self.is_provisioned:
             msg = 'Node "{0}" was not provisioned.'.format(self.name)
             self.context.logger.error(msg)
@@ -463,6 +549,11 @@ class OrchestraNode(object):
                 })
 
     def attempt_to_validate(self):
+        """
+        Validates node using its properties and attributes
+
+        :return:
+        """
         try:
             self.context.logger.debug(
                 'Validating properties for node "{0}".'.format(self.name))
@@ -476,18 +567,41 @@ class OrchestraNode(object):
 
     @property
     def name(self):
+        """
+        Represents node name
+
+        :return: name
+        :rtype: str
+        """
         return self.__name
 
     @property
     def is_provisioned(self):
+        """
+        Represents node state
+
+        :return: state
+        :rtype: bool
+        """
         return self.__provisioned
 
     @is_provisioned.setter
     def is_provisioned(self, provisioned):
+        """
+        Node state setter
+
+        :param provisioned: True/False
+        """
         self.__provisioned = provisioned
 
     @property
     def properties(self):
+        """
+        Represents initialized node properties
+
+        :return: node properties
+        :rtype: dict
+        """
         self.context.logger.debug('Retrieving node {0} properties.'
                                   .format(self.name))
         self.__setup_properties()
@@ -495,21 +609,56 @@ class OrchestraNode(object):
 
     @properties.setter
     def properties(self, other):
+        """
+        Property setter is not allowed to use.
+
+        :param other: None
+        :return:
+        """
         raise Exception('Node "properties" are immutable.')
 
     def update_runtime_properties(self, attr, value):
+        """
+        Updates node runtime properties
+
+        :param attr: name
+        :param value: value
+        :return: None
+        :rtype: None
+        """
         self.__runtime_properties.update({attr: value})
 
     def batch_update_runtime_properties(self, **kwargs):
+        """
+        Performs batch update for node runtime properties
+
+        :param kwargs: runtime properties
+        :type kwargs: dict
+        :return:
+        """
         for k, v in kwargs.items():
             self.update_runtime_properties(k, v)
 
     @property
     def attributes(self):
+        """
+        Represents node attributes
+
+        :return: attributes
+        :rtype: dict
+        """
         self.__setup_attributes_definition_for_node_instance()
         return self.__attributes
 
     def get_attribute(self, attr):
+        """
+        Return node attribute if it exists otherwise raises exception
+
+        :param attr: attribute to seek for
+        :return: attribute value
+        :rtype: object
+        :raises unknown_attribute: AttributeError
+        """
         if attr in self.attributes:
             return self.runtime_properties.get(attr)
         else:
@@ -518,22 +667,51 @@ class OrchestraNode(object):
 
     @attributes.setter
     def attributes(self, other):
+        """
+        Attribute setter is not allowed.
+
+        :param other:
+        :return:
+        """
         raise Exception('Node attributes are immutable.')
 
     @property
     def runtime_properties(self):
+        """
+        Represents node runtime attributes
+
+        :return: runtime attributes
+        :rtype: dict
+        """
         return self.__runtime_properties
 
     @runtime_properties.setter
     def runtime_properties(self, other):
+        """
+        Runtime properties setter
+
+        :param other:
+        :return:
+        """
         self.__runtime_properties = other
 
     @property
     def has_parents(self):
+        """
+        Return True if node has parent nodes
+
+        :return:
+        """
         return True if len(self.child_nodes) > 0 else False
 
     @property
     def parent_nodes(self):
+        """
+        Returns a list of parent nodes
+
+        :return: parents
+        :rtype: list of str
+        """
         required = []
         for node in [list(n.values())[0] for n in self.node._requirements]:
             if isinstance(node, str):
@@ -543,6 +721,13 @@ class OrchestraNode(object):
         return required
 
     def get_requirement_capability(self, target):
+        """
+        Return node requirement capability
+
+        :param target: target OrchestraNode instance
+        :return: capability def
+        :rtype: dict
+        """
         cap_def = {}
         for req in self.node._requirements:
             for _, req_def in req.items():
@@ -563,23 +748,54 @@ class OrchestraNode(object):
 
     @property
     def has_children(self):
+        """
+        Returns true if node has child nodes
+
+        :return: True/False
+        :rtype: bool
+        """
         return True if len(self.parent_nodes) > 0 else False
 
     @property
     def child_nodes(self):
+        """
+        Represents a list of child nodes
+
+        :return: child nodes
+        :rtype: list
+        """
         return [list(req.values())[0] for req in self.node.requirements]
 
     @lifecycle_event_handler
     async def link(self, source):
+        """
+        Relationship coroutine to link target to source
+
+        :param source:
+        :return: None
+        :rtype: None
+        """
         await self.operations.run_relationship_event(self, source, 'link')
 
     @lifecycle_event_handler
     async def unlink(self, source):
+        """
+        Relationship coroutine to unlink target from source
+
+        :param source:
+        :return: None
+        :rtype: None
+        """
         await self.operations.run_relationship_event(self, source, 'unlink')
 
     @lifecycle_event_handler
     async def create(self):
+        """
+        Standard lifecycle coroutine to run create event
 
+        :return: None
+        :rtype: None
+        """
         for target in self.context.deployment_plan[self]:
             if target.name != self.name:
                 await target.link(self)
@@ -589,18 +805,42 @@ class OrchestraNode(object):
 
     @lifecycle_event_handler
     async def configure(self):
+        """
+        Standard lifecycle coroutine to run ccnfigure event
+
+        :return: None
+        :rtype: None
+        """
         await self.operations.run_standard_event(self, 'configure')
 
     @lifecycle_event_handler
     async def start(self):
+        """
+        Standard lifecycle coroutine to run start event
+
+        :return: None
+        :rtype: None
+        """
         await self.operations.run_standard_event(self, 'start')
 
     @lifecycle_event_handler
     async def stop(self):
+        """
+        Standard lifecycle coroutine to run stop event
+
+        :return: None
+        :rtype: None
+        """
         await self.operations.run_standard_event(self, 'stop')
 
     @lifecycle_event_handler
     async def delete(self):
+        """
+        Standard lifecycle coroutine to delete create event
+
+        :return: None
+        :rtype: None
+        """
         await self.operations.run_standard_event(self, 'delete')
         for target in self.context.deployment_plan[self]:
             if target.name != self.name:
@@ -611,6 +851,12 @@ class OrchestraNode(object):
         return 'Node {0}'.format(self.name)
 
     def serialize(self):
+        """
+        Serializes node critical information for further consumption
+
+        :return: serialized node
+        :rtype: dict
+        """
         return {
             '__name': self.name,
             'is_provisioned': self.__provisioned,
@@ -620,6 +866,13 @@ class OrchestraNode(object):
         }
 
     def load(self, **kwargs):
+        """
+        Loads node from serialized object
+
+        :param kwargs: node attributes
+        :return: node
+        :rtype: OrchestraNode
+        """
         for k, v in kwargs.items():
             setattr(self, k, v)
         return self

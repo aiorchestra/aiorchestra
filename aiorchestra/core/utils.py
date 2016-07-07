@@ -26,6 +26,21 @@ class Singleton(type):
 
 async def retry(fn, args=None, kwargs=None, exceptions=None,
                 task_retries=1, task_retry_interval=10):
+    """
+    Retry operation coroutine-handler for operation that
+    are requiring polling for object changes.
+
+    :param fn: retry coroutine
+    :param args: retry coroutine args
+    :param kwargs: retry coroutine kwargs
+    :param exceptions: exception that are meant to be as not critical
+                       and would not stop retrying
+    :param task_retries: number of retries for retry coroutine
+    :param task_retry_interval: retry interval for retry
+                                coroutine between retries
+    :return: result
+    :rtype: object
+    """
     args = args or []
     kwargs = kwargs or {}
 
@@ -44,6 +59,14 @@ async def retry(fn, args=None, kwargs=None, exceptions=None,
 
 
 def operation(action):
+    """
+    Node lifecycle event operation coroutine-handler
+
+    :param action: node lifecycle event
+    :type action: awaitable
+    :return: None
+    :rtype: None
+    """
     async def wraps(*args, **kwargs):
         source = list(args)[0]
         source.context.logger.debug(
