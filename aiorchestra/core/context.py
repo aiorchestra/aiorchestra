@@ -33,6 +33,21 @@ class OrchestraContext(object):
                  logger=None,
                  event_loop=None,
                  enable_rollback=False):
+        """
+        Represents AIOrchestra deployment context designed to
+        manage deployment through its lifecycle
+
+        :param name: deployment context name
+        :type name: str
+        :param path: path to TOSCA template
+        :type path: str
+        :param template_inputs: TOSCA template input parameters
+        :type template_inputs: dict
+        :param logger: python logger instance
+        :param event_loop: asyncio or any compatible event loop
+        :type event_loop: asyncio.Loop
+        :param enable_rollback: weather to enable rollback on failure or not
+        """
         self.__name = name
         self._tmplt = tosca_template.ToscaTemplate(
             path=path, a_file=True,
@@ -64,6 +79,12 @@ class OrchestraContext(object):
 
     @property
     def outputs(self):
+        """
+        Represents a mapping of deployment outputs.
+
+        :return: mapping of outputs
+        :rtype: dict
+        """
         outputs = {}
         if self.status in self.AVAILABLE_FOR_DESTRUCTION:
             for item in self.__outputs:
@@ -83,35 +104,85 @@ class OrchestraContext(object):
 
     @property
     def status(self):
+        """
+        Represents deployment context status
+
+        :return: status
+        :rtype: str
+        """
         return self.__status
 
     @status.setter
     def status(self, status):
+        """
+        Represents deployment context status setter
+
+        :param status:
+        :return: None
+        :rtype: None
+        """
         self.__status = status
 
     @property
     def name(self):
+        """
+        Represent deployment context name
+
+        :return: name
+        :rtype: str
+        """
         return self.__name
 
     @name.setter
     def name(self, other):
+        """
+        Deployment context setter is not allowed
+
+        :param other: other name
+        :return: None
+        :raises: exception
+        """
         raise Exception('Orchestra context name is unique. '
                         'Current - {0}.'.format(self.name))
 
     @property
     def nodes(self):
+        """
+        Represents deployment context nodes
+
+        :return: nodes
+        :rtype: list of aiorchestra.core.node.OrchestraNode
+        """
         return self.__orchestra_nodes
 
     @nodes.setter
     def nodes(self, new):
+        """
+        Represents deployment context node setter
+
+        :param new: OrchestraNode
+        :return: None
+        :rtype: None
+        """
         self.__orchestra_nodes = new
 
     def node_from_name(self, name):
+        """
+        Returns node from its name
+
+        :param name: node
+        :return: node
+        :rtype: aiorchestra.core.node.OrchestraNode
+        """
         for orchestra_node in self.nodes:
             if orchestra_node.name == name:
                 return orchestra_node
 
     def __setup_deployment_plan(self):
+        """
+        Represents context deployment plan initialization
+        :return:
+        """
         self.logger.info('Retrieving deployment plan for '
                          'TOSCA template {0} context.'
                          .format(self.name))
@@ -159,11 +230,24 @@ class OrchestraContext(object):
 
     @property
     def deployment_plan(self):
+        """
+        Return initialized deployment plan
+
+        :return: deployment plan
+        :rtype: dict
+        """
         if self.__deployment_plan is None:
             self.__setup_deployment_plan()
         return self.__deployment_plan
 
     def _gather_events(self, event):
+        """
+        Gathers events from node standard events API
+
+        :param event: node standard event type
+        :return: sequence of events
+        :rtype: list
+        """
         sequenced_events = []
         nodes_order = []
         for target_node, deployment_plan in self.deployment_plan.items():
@@ -176,6 +260,10 @@ class OrchestraContext(object):
         return sequenced_events
 
     def _assert_nodes_were_provisioned(self):
+        """
+        Asserts weather all nodes were provisioned or not
+        :return:
+        """
         gather = []
         for n in self.nodes:
             self.logger.debug('Node "{0}" is provisioned: "{1}".'
@@ -184,6 +272,12 @@ class OrchestraContext(object):
         return any(gather)
 
     async def deploy(self):
+        """
+        Coroutine to start deployment
+
+        :return: None
+        :rtype: None
+        """
         task_list = []
         standard_events_order = ['create', 'configure', 'start']
         self.logger.info('Starting deployment process for deployment '
@@ -212,6 +306,12 @@ class OrchestraContext(object):
                             'PENDING status required.')
 
     async def undeploy(self):
+        """
+        Coroutine to start reverse process to deployment
+
+        :return: None
+        :rtype: None
+        """
         self.logger.info('Starting teardown process for deployment '
                          'context {0}.'.format(self.name))
         task_list = []
@@ -246,12 +346,30 @@ class OrchestraContext(object):
             raise Exception(msg)
 
     def run_deploy(self):
+        """
+        Awaits until deploy finished and exits
+
+        :return: None
+        :rtype: None
+        """
         self.event_loop.run_until_complete(self.deploy())
 
     def run_undeploy(self):
+        """
+        Awaits until undeploy finished and exits
+
+        :return: None
+        :rtype: None
+        """
         self.event_loop.run_until_complete(self.undeploy())
 
     def serialize(self):
+        """
+        Serializes deployment context into dict object for further consumption
+
+        :return: a dict of serialized attributes
+        :rtype: dict
+        """
         return {
             'name': self.__name,
             'status': self.status,
@@ -262,6 +380,15 @@ class OrchestraContext(object):
 
     @classmethod
     def load(cls, logger, event_loop=None, **kwargs):
+        """
+        Loads deployment context from serialized object
+
+        :param logger: python logger instance
+        :param event_loop: asyncio event loop or compatible
+        :param kwargs: serialized deployment context as kwargs
+        :return: restored deployment context
+        :rtype: OrchestraContext
+        """
         name = kwargs.get('name')
         inputs = kwargs.get('template_inputs')
         nodes = kwargs.get('nodes')
