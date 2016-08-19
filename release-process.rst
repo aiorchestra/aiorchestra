@@ -8,6 +8,7 @@ Steps::
 
     tox -epep8
     tox -epy35
+    tox -esphinx-docs
 
 
 Decleare package version
